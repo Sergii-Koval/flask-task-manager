@@ -26,5 +26,23 @@ def create_task():
     return render_template('create_task.html')
 
 
+@app.route('/edit-task/<int:id>', methods=['GET', 'POST'])
+def edit_task(id):
+    task = Task.query.get(id)
+    if request.method == 'POST':
+        task.title = request.form['title']
+        db.session.commit()
+        return redirect(url_for('index'))
+    return render_template('edit_task.html', task=task)
+
+
+@app.route('/delete-task/<int:id>', methods=['POST'])
+def delete_task(id):
+    task = Task.query.get(id)
+    db.session.delete(task)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+
 if __name__ == "__main__":
     app.run(debug=True)
