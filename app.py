@@ -44,19 +44,6 @@ def delete_task(id):
     return redirect(url_for('index'))
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user is not None and user.password == password:
-            session['user_id'] = user.id
-            return redirect(url_for('index'))
-        else:
-            flash('Invalid username or password')
-    return render_template('login.html')
-
 
 @app.route('/logout')
 def logout():
@@ -70,8 +57,13 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        password2 = request.form['password2']
+        if password != password2:
+            flash('Passwords do not match')
+            return redirect(url_for('register'))
         if User.query.filter_by(username=username).first() is not None:
             flash('Username already exists')
+            return redirect(url_for('register'))
         else:
             user = User(username=username, password=password)
             db.session.add(user)
@@ -79,6 +71,20 @@ def register():
             flash('Successfully registered')
             return redirect(url_for('login'))
     return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user is None or not user.verify_password(password):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        session['user_id'] = user.id
+        return redirect(url_for('index'))
+    return render_template('login.html')
+
 
 
 if __name__ == "__main__":
