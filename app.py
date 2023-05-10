@@ -1,12 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from database import db
-from models import Task
+from models import Task, User
 from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config.from_object('config')
 db.init_app(app)
 migrate = Migrate(app, db)
+
 
 
 @app.route('/')
@@ -42,6 +43,41 @@ def delete_task(id):
     db.session.delete(task)
     db.session.commit()
     return redirect(url_for('index'))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user is not None and user.password == password:
+            session['user_id'] = user.id
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password')
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    if 'user_id' in session:
+        session.pop('user_id')
+    return redirect(url_for('index'))
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if User.query.filter_by(username=username).first() is not None:
+            flash('Username already exists')
+        else:
+            user = User(username=username, password=password)
+            db.session.add(user)
+            db.session.commit()
+            flash('Successfully registered')
+            return redirect(url_for('login'))
+    return render_template('register.html')
 
 
 if __name__ == "__main__":
