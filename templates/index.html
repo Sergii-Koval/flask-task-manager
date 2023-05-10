@@ -2,4 +2,11 @@
 
 {% block content %}
 <h1>Welcome to Task Manager!</h1>
+<ul>
+    {% for task in tasks %}
+    <li>{{ task.title }}</li>
+    {% else %}
+    <li>No tasks yet.</li>
+    {% endfor %}
+</ul>
 {% endblock %}
