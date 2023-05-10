@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for
 from database import db
 from models import Task
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config.from_object('config')
 db.init_app(app)
+migrate = Migrate(app, db)
 
 
 @app.route('/')
