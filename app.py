@@ -9,7 +9,6 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 
-
 @app.route('/')
 def index():
     tasks = Task.query.all()
@@ -64,6 +63,8 @@ def logout():
     if 'user_id' in session:
         session.pop('user_id')
     return redirect(url_for('index'))
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
