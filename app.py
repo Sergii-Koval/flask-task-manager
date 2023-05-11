@@ -8,12 +8,10 @@ app.config.from_object('config')
 db.init_app(app)
 migrate = Migrate(app, db)
 
-
 @app.route('/')
 def index():
     tasks = Task.query.all()
     return render_template('index.html', tasks=tasks)
-
 
 @app.route('/create-task', methods=['GET', 'POST'])
 def create_task():
@@ -25,7 +23,6 @@ def create_task():
         return redirect(url_for('index'))
     return render_template('create_task.html')
 
-
 @app.route('/edit-task/<int:id>', methods=['GET', 'POST'])
 def edit_task(id):
     task = Task.query.get(id)
@@ -35,7 +32,6 @@ def edit_task(id):
         return redirect(url_for('index'))
     return render_template('edit_task.html', task=task)
 
-
 @app.route('/delete-task/<int:id>', methods=['POST'])
 def delete_task(id):
     task = Task.query.get(id)
@@ -43,7 +39,18 @@ def delete_task(id):
     db.session.commit()
     return redirect(url_for('index'))
 
-
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user is not None and user.check_password(password):
+            session['user_id'] = user.id
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password')
+    return render_template('login.html')
 
 @app.route('/logout')
 def logout():
@@ -51,41 +58,24 @@ def logout():
         session.pop('user_id')
     return redirect(url_for('index'))
 
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         password2 = request.form['password2']
-        if password != password2:
-            flash('Passwords do not match')
-            return redirect(url_for('register'))
         if User.query.filter_by(username=username).first() is not None:
             flash('Username already exists')
-            return redirect(url_for('register'))
+        elif password != password2:
+            flash('Passwords do not match')
         else:
-            user = User(username=username, password=password)
+            user = User(username=username)
+            user.set_password(password)
             db.session.add(user)
             db.session.commit()
             flash('Successfully registered')
             return redirect(url_for('login'))
     return render_template('register.html')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user is None or not user.verify_password(password):
-            flash('Invalid username or password')
-            return redirect(url_for('login'))
-        session['user_id'] = user.id
-        return redirect(url_for('index'))
-    return render_template('login.html')
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
