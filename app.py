@@ -1,5 +1,5 @@
 import time
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from database import db
 from models import Task, User
 from flask_migrate import Migrate
@@ -63,6 +63,8 @@ def index():
 
 @app.route('/create_task', methods=['GET', 'POST'])
 def create_task():
+    if 'user_id' not in session or not check_dev_role():
+        abort(403)
     if request.method == 'POST':
         title = request.form['title']
         description = request.form['description']
@@ -75,7 +77,9 @@ def create_task():
 
 @app.route('/edit_task/<int:id>', methods=['GET', 'POST'])
 def edit_task(id):
-    task = Task.query.get(id)
+    if 'user_id' not in session or not check_dev_role():
+        abort(403)
+    task = Task.query.get_or_404(id)
     if request.method == 'POST':
         task.title = request.form['title']
         task.description = request.form['description']
@@ -84,14 +88,42 @@ def edit_task(id):
     return render_template('edit_task.html', task=task)
 
 
-
 @app.route('/delete-task/<int:id>', methods=['POST'])
 def delete_task(id):
+    if 'user_id' not in session or not check_dev_role():
+        abort(403)
     if not check_admin_role():
-        return redirect(url_for('index'))
+        abort(403)
 
-    task = Task.query.get(id)
+    task = Task.query.get_or_404(id)
     db.session.delete(task)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+
+@app.route('/accept_task/<int:id>', methods=['POST'])
+def accept_task(id):
+    if 'user_id' not in session or not check_dev_role():
+        abort(403)
+    task = Task.query.get_or_404(id)
+    if 'user_id' not in session or session['user_role'] not in ['admin', 'dev'] or task.status != 'pending':
+        abort(403)
+    task.status = 'in_progress'
+    task.user_id = session['user_id']
+    db.session.commit()
+    return redirect(url_for('index'))
+
+
+@app.route('/complete_task/<int:id>', methods=['POST'])
+def complete_task(id):
+    if 'user_id' not in session or not check_dev_role():
+        abort(403)
+    task = Task.query.get_or_404(id)
+    if task and ('user_id' not in session or (
+            session['user_id'] != task.user_id and session['user_role'] != 'admin') or task.status != 'in_progress'):
+        abort(403)
+    task.status = 'done'
+    task.done_time = int(time.time())
     db.session.commit()
     return redirect(url_for('index'))
 
@@ -145,31 +177,6 @@ def inject_user():
         user = User.query.get(user_id)
         return {'current_user': user}
     return {'current_user': None}
-
-
-@app.route('/accept_task/<int:id>', methods=['POST'])
-def accept_task(id):
-    task = Task.query.get(id)
-    if 'user_id' in session and session['user_role'] in ['admin', 'dev'] and task.status == 'pending':
-        task.status = 'in_progress'
-        task.user_id = session['user_id']
-        db.session.commit()
-        return redirect(url_for('index'))
-    else:
-        return "You do not have the required permissions to accept this task", 403
-
-
-@app.route('/complete_task/<int:id>', methods=['POST'])
-def complete_task(id):
-    task = Task.query.get(id)
-    if task and 'user_id' in session and (
-            session['user_id'] == task.user_id or session['user_role'] == 'admin') and task.status == 'in_progress':
-        task.status = 'done'
-        task.done_time = int(time.time())
-        db.session.commit()
-        return redirect(url_for('index'))
-    else:
-        return "You do not have the required permissions to complete this task", 403
 
 
 @app.template_filter('unixtime')
