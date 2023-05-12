@@ -7,7 +7,7 @@
             <tr>
                 <th>Username</th>
                 <th>Role</th>
-                <th>Registered At</th>
+                <th>Change Role</th>
             </tr>
         </thead>
         <tbody>
@@ -15,7 +15,19 @@
                 <tr>
                     <td>{{ user.username }}</td>
                     <td>{{ user.role }}</td>
-                    <td>{{ user.registered_at }}</td>
+                    <td>
+                        <form method="POST">
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <label>
+                                <select name="role">
+                                    <option value="admin" {% if user.role == 'admin' %} selected {% endif %}>admin</option>
+                                    <option value="dev" {% if user.role == 'dev' %} selected {% endif %}>dev</option>
+                                    <option value="user" {% if user.role == 'user' %} selected {% endif %}>user</option>
+                                </select>
+                            </label>
+                            <button type="submit">Update Role</button>
+                        </form>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

@@ -9,13 +9,23 @@ app.config.from_object(Config)
 db.init_app(app)
 migrate = Migrate(app, db)
 
-@app.route('/admin')
+@app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if not check_admin_role():
         return redirect(url_for('index'))
 
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        new_role = request.form.get('role')
+
+        user = User.query.get(user_id)
+        if user:
+            user.role = new_role
+            db.session.commit()
+
     users = User.query.all()
     return render_template('admin.html', users=users)
+
 
 
 def check_admin_role():
