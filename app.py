@@ -2,11 +2,47 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from database import db
 from models import Task, User
 from flask_migrate import Migrate
+from config import Config
 
 app = Flask(__name__)
-app.config.from_object('config')
+app.config.from_object(Config)
 db.init_app(app)
 migrate = Migrate(app, db)
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if not check_admin_role():
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        new_role = request.form.get('role')
+
+        user = User.query.get(user_id)
+        if user:
+            user.role = new_role
+            db.session.commit()
+
+    users = User.query.all()
+    return render_template('admin.html', users=users)
+
+
+
+def check_admin_role():
+    user_id = session.get('user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        if user and user.role == 'admin':
+            return True
+    return False
+
+def check_dev_role():
+    user_id = session.get('user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        if user and user.role in ('admin', 'dev'):
+            return True
+    return False
 
 @app.route('/')
 def index():
@@ -15,6 +51,9 @@ def index():
 
 @app.route('/create-task', methods=['GET', 'POST'])
 def create_task():
+    if not check_admin_role():
+        return redirect(url_for('index'))
+
     if request.method == 'POST':
         title = request.form['title']
         task = Task(title=title)
@@ -25,6 +64,9 @@ def create_task():
 
 @app.route('/edit-task/<int:id>', methods=['GET', 'POST'])
 def edit_task(id):
+    if not check_admin_role():
+        return redirect(url_for('index'))
+
     task = Task.query.get(id)
     if request.method == 'POST':
         task.title = request.form['title']
@@ -34,6 +76,9 @@ def edit_task(id):
 
 @app.route('/delete-task/<int:id>', methods=['POST'])
 def delete_task(id):
+    if not check_admin_role():
+        return redirect(url_for('index'))
+
     task = Task.query.get(id)
     db.session.delete(task)
     db.session.commit()
@@ -76,6 +121,15 @@ def register():
             flash('Successfully registered')
             return redirect(url_for('login'))
     return render_template('register.html')
+
+@app.context_processor
+def inject_user():
+    user_id = session.get('user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        return {'current_user': user}
+    return {'current_user': None}
+
 
 if __name__ == "__main__":
     app.run(debug=True)

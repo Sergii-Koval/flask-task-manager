@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Admin page</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Change Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.role }}</td>
+                    <td>
+                        <form method="POST">
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <label>
+                                <select name="role">
+                                    <option value="admin" {% if user.role == 'admin' %} selected {% endif %}>admin</option>
+                                    <option value="dev" {% if user.role == 'dev' %} selected {% endif %}>dev</option>
+                                    <option value="user" {% if user.role == 'user' %} selected {% endif %}>user</option>
+                                </select>
+                            </label>
+                            <button type="submit">Update Role</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
