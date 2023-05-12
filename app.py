@@ -1,8 +1,10 @@
+import time
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from database import db
 from models import Task, User
 from flask_migrate import Migrate
 from config import Config
+from datetime import datetime
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -105,6 +107,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user is not None and user.check_password(password):
             session['user_id'] = user.id
+            session['user_role'] = user.role
             return redirect(url_for('index'))
         else:
             flash('Invalid username or password')
@@ -146,6 +149,34 @@ def inject_user():
         return {'current_user': user}
     return {'current_user': None}
 
+
+@app.route('/accept_task/<int:id>', methods=['POST'])
+def accept_task(id):
+    task = Task.query.get(id)
+    if 'user_id' in session and session['user_role'] in ['admin', 'dev'] and task.status == 'pending':
+        task.status = 'in_progress'
+        task.user_id = session['user_id']
+        db.session.commit()
+        return redirect(url_for('index'))
+    else:
+        return "You do not have the required permissions to accept this task", 403
+
+
+@app.route('/complete_task/<int:id>', methods=['POST'])
+def complete_task(id):
+    task = Task.query.get(id)
+    if task and 'user_id' in session and (session['user_id'] == task.user_id or session['user_role'] == 'admin') and task.status == 'in_progress':
+        task.status = 'done'
+        task.done_time = int(time.time())
+        db.session.commit()
+        return redirect(url_for('index'))
+    else:
+        return "You do not have the required permissions to complete this task", 403
+
+
+@app.template_filter('unixtime')
+def unixtime_filter(s):
+    return datetime.fromtimestamp(s).strftime('%Y-%m-%d %H:%M:%S') if s else 'N/A'
 
 if __name__ == "__main__":
     app.run(debug=True)
