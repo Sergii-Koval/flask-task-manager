@@ -1,14 +1,9 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h2>Create a new task</h2>
-    <form method="POST">
-        <div class="mb-3">
-            <label for="title" class="form-label">Title</label>
-            <input type="text" class="form-control" id="title" name="title">
-        </div>
-        <button type="submit" class="btn btn-primary">Create</button>
-    </form>
-</div>
+<h1>Create Task</h1>
+<form method="POST">
+    <input type="text" name="title" placeholder="Task Title" required>
+    <input type="submit" value="Create Task">
+</form>
 {% endblock %}
