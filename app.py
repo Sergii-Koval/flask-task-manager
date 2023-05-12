@@ -61,31 +61,28 @@ def index():
                            )
 
 
-@app.route('/create-task', methods=['GET', 'POST'])
+@app.route('/create_task', methods=['GET', 'POST'])
 def create_task():
-    if not check_admin_role():
-        return redirect(url_for('index'))
-
     if request.method == 'POST':
         title = request.form['title']
-        task = Task(title=title)
-        db.session.add(task)
+        description = request.form['description']
+        new_task = Task(title=title, description=description, status='pending')
+        db.session.add(new_task)
         db.session.commit()
         return redirect(url_for('index'))
     return render_template('create_task.html')
 
 
-@app.route('/edit-task/<int:id>', methods=['GET', 'POST'])
+@app.route('/edit_task/<int:id>', methods=['GET', 'POST'])
 def edit_task(id):
-    if not check_admin_role():
-        return redirect(url_for('index'))
-
     task = Task.query.get(id)
     if request.method == 'POST':
         task.title = request.form['title']
+        task.description = request.form['description']
         db.session.commit()
         return redirect(url_for('index'))
     return render_template('edit_task.html', task=task)
+
 
 
 @app.route('/delete-task/<int:id>', methods=['POST'])
