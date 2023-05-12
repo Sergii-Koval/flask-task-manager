@@ -9,6 +9,7 @@ app.config.from_object(Config)
 db.init_app(app)
 migrate = Migrate(app, db)
 
+
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if not check_admin_role():
@@ -27,7 +28,6 @@ def admin():
     return render_template('admin.html', users=users)
 
 
-
 def check_admin_role():
     user_id = session.get('user_id')
     if user_id:
@@ -35,6 +35,7 @@ def check_admin_role():
         if user and user.role == 'admin':
             return True
     return False
+
 
 def check_dev_role():
     user_id = session.get('user_id')
@@ -44,10 +45,19 @@ def check_dev_role():
             return True
     return False
 
+
 @app.route('/')
 def index():
-    tasks = Task.query.all()
-    return render_template('index.html', tasks=tasks)
+    pending_tasks = Task.query.filter_by(status='pending').order_by(Task.create_time).all()
+    in_progress_tasks = Task.query.filter_by(status='in_progress').order_by(Task.create_time).all()
+    done_tasks = Task.query.filter_by(status='done').order_by(Task.done_time).all()
+
+    return render_template('index.html',
+                           pending_tasks=pending_tasks,
+                           in_progress_tasks=in_progress_tasks,
+                           done_tasks=done_tasks
+                           )
+
 
 @app.route('/create-task', methods=['GET', 'POST'])
 def create_task():
@@ -62,6 +72,7 @@ def create_task():
         return redirect(url_for('index'))
     return render_template('create_task.html')
 
+
 @app.route('/edit-task/<int:id>', methods=['GET', 'POST'])
 def edit_task(id):
     if not check_admin_role():
@@ -74,6 +85,7 @@ def edit_task(id):
         return redirect(url_for('index'))
     return render_template('edit_task.html', task=task)
 
+
 @app.route('/delete-task/<int:id>', methods=['POST'])
 def delete_task(id):
     if not check_admin_role():
@@ -83,6 +95,7 @@ def delete_task(id):
     db.session.delete(task)
     db.session.commit()
     return redirect(url_for('index'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -97,11 +110,13 @@ def login():
             flash('Invalid username or password')
     return render_template('login.html')
 
+
 @app.route('/logout')
 def logout():
     if 'user_id' in session:
         session.pop('user_id')
     return redirect(url_for('index'))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -121,6 +136,7 @@ def register():
             flash('Successfully registered')
             return redirect(url_for('login'))
     return render_template('register.html')
+
 
 @app.context_processor
 def inject_user():
