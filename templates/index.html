@@ -2,7 +2,7 @@
 
 {% block content %}
 <h1>Tasks pending</h1>
-    {% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
+{% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
     <a href="{{ url_for('create_task') }}">Create Task</a>
 {% endif %}
 <table>
@@ -12,8 +12,9 @@
         <td>{{ task.title }}</td>
         <td>{{ task.description }}</td>
         <td>{{ task.status }}</td>
-        <td>{{ task.user.name if task.user else 'N/A' }}</td>
-        <td>{{ task.done_time if task.done_time else 'N/A' }}</td>
+        <td>{{ task.user.username if task.user else 'N/A' }}</td>
+        <td>{{ task.done_time|unixtime }}</td>
+
         {% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
             <td><a href="{{ url_for('edit_task', id=task.id) }}">Edit</a></td>
             <td>
@@ -21,10 +22,16 @@
                     <input type="submit" value="Delete">
                 </form>
             </td>
+            <td>
+                <form action="{{ url_for('accept_task', id=task.id) }}" method="post">
+                    <input type="submit" value="Accept the task">
+                </form>
+            </td>
         {% endif %}
     </tr>
     {% endfor %}
 </table>
+
 
 <h1>Tasks in development</h1>
 <table>
@@ -34,13 +41,19 @@
         <td>{{ task.title }}</td>
         <td>{{ task.description }}</td>
         <td>{{ task.status }}</td>
-        <td>{{ task.user.name if task.user else 'N/A' }}</td>
-        <td>{{ task.done_time if task.done_time else 'N/A' }}</td>
+        <td>{{ task.user.username if task.user else 'N/A' }}</td>
+        <td>{{ task.done_time|unixtime }}</td>
+
         {% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
             <td><a href="{{ url_for('edit_task', id=task.id) }}">Edit</a></td>
             <td>
                 <form action="{{ url_for('delete_task', id=task.id) }}" method="post">
                     <input type="submit" value="Delete">
+                </form>
+            </td>
+            <td>
+                <form action="{{ url_for('complete_task', id=task.id) }}" method="post">
+                    <input type="submit" value="Complete the task">
                 </form>
             </td>
         {% endif %}
@@ -56,8 +69,9 @@
         <td>{{ task.title }}</td>
         <td>{{ task.description }}</td>
         <td>{{ task.status }}</td>
-        <td>{{ task.user.name if task.user else 'N/A' }}</td>
-        <td>{{ task.done_time if task.done_time else 'N/A' }}</td>
+        <td>{{ task.user.username if task.user else 'N/A' }}</td>
+        <td>{{ task.done_time|unixtime }}</td>
+
         {% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
             <td><a href="{{ url_for('edit_task', id=task.id) }}">Edit</a></td>
             <td>
@@ -70,3 +84,4 @@
     {% endfor %}
 </table>
 {% endblock %}
+
