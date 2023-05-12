@@ -165,7 +165,8 @@ def accept_task(id):
 @app.route('/complete_task/<int:id>', methods=['POST'])
 def complete_task(id):
     task = Task.query.get(id)
-    if task and 'user_id' in session and (session['user_id'] == task.user_id or session['user_role'] == 'admin') and task.status == 'in_progress':
+    if task and 'user_id' in session and (
+            session['user_id'] == task.user_id or session['user_role'] == 'admin') and task.status == 'in_progress':
         task.status = 'done'
         task.done_time = int(time.time())
         db.session.commit()
@@ -177,6 +178,7 @@ def complete_task(id):
 @app.template_filter('unixtime')
 def unixtime_filter(s):
     return datetime.fromtimestamp(s).strftime('%Y-%m-%d %H:%M:%S') if s else 'N/A'
+
 
 if __name__ == "__main__":
     app.run(debug=True)
