@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Welcome to Task Manager!</h1>
-<ul>
+    <h1>Task Manager</h1>
+    {% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
+        <a href="{{ url_for('create_task') }}">Create Task</a>
+    {% endif %}
     {% for task in tasks %}
-    <li>
-        {{ task.title }}
-        <a href="{{ url_for('edit_task', id=task.id) }}">Edit</a>
-        <form method="POST" action="{{ url_for('delete_task', id=task.id) }}">
-            <input type="submit" value="Delete">
-        </form>
-    </li>
-    {% else %}
-    <li>No tasks yet.</li>
+        <div class="task">
+            <h2>{{ task.title }}</h2>
+            {% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
+                <a href="{{ url_for('edit_task', id=task.id) }}">Edit</a>
+                <form action="{{ url_for('delete_task', id=task.id) }}" method="post">
+                    <input type="submit" value="Delete">
+                </form>
+            {% endif %}
+        </div>
     {% endfor %}
-</ul>
-<a href="{{ url_for('create_task') }}">Create a new task</a>
 {% endblock %}
