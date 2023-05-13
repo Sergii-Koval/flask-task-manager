@@ -8,6 +8,19 @@
     </form>
 {% endif %}
 <table>
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Assigned to</th>
+        <th>Done Time</th>
+        {% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
+            <th>Edit</th>
+            <th>Delete</th>
+            <th>Accept</th>
+        {% endif %}
+    </tr>
     {% for task in pending_tasks %}
     <tr>
         <td>{{ task.id }}</td>
@@ -38,10 +51,22 @@
     {% endfor %}
 </table>
 
-
 <h1>Tasks in development</h1>
 <table>
-    {% for task in in_progress_tasks %}
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Assigned to</th>
+        <th>Done Time</th>
+        {% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
+            <th>Edit</th>
+            <th>Delete</th>
+            <th>Complete</th>
+        {% endif %}
+    </tr>
+{% for task in in_progress_tasks %}
     <tr>
         <td>{{ task.id }}</td>
         <td>{{ task.title }}</td>
@@ -73,6 +98,18 @@
 
 <h1>Completed tasks</h1>
 <table>
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Assigned to</th>
+        <th>Done Time</th>
+        {% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
+            <th>Edit</th>
+            <th>Delete</th>
+        {% endif %}
+    </tr>
     {% for task in done_tasks %}
     <tr>
         <td>{{ task.id }}</td>
