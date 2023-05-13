@@ -8,17 +8,19 @@
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('index') }}">Home</a>
-        {% if 'user_id' in session %}
-            <a href="{{ url_for('logout') }}">Logout</a>
-            {% if current_user.role == 'admin' %}
-                <a href="{{ url_for('admin') }}">Admin</a>  <!-- Добавляем ссылку на страницу администратора -->
-            {% endif %}
-        {% else %}
-            <a href="{{ url_for('login') }}">Login</a>
-            <a href="{{ url_for('register') }}">Register</a>
+    <a href="{{ url_for('index') }}">Home</a>
+    {% if 'user_id' not in session %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+    {% else %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+        {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('admin') }}">Admin</a>
         {% endif %}
-    </nav>
+        <span>Welcome, {{ current_user.username }}</span>
+    {% endif %}
+</nav>
+
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             <ul class="flashes">
