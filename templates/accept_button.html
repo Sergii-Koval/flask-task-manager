@@ -1,0 +1,7 @@
+{% if 'user_id' in session and current_user.role in ['admin', 'dev'] %}
+    <td>
+        <form action="{{ url_for('accept_task', id=task.id) }}" method="post">
+            <button type="submit">Accept the task</button>
+        </form>
+    </td>
+{% endif %}
